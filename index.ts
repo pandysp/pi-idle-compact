@@ -3,7 +3,7 @@ import type { ExtensionAPI, ExtensionContext, SessionEntry } from "@earendil-wor
 type Model = NonNullable<ExtensionContext["model"]>;
 
 /** pi's own error for a session too small to compact (agent-session.js:2184 in pi 1.0.4). */
-export const NOTHING_TO_COMPACT = "Nothing to compact (session too small)";
+const NOTHING_TO_COMPACT = "Nothing to compact (session too small)";
 
 /**
  * The timer checks this long after the deadline. pi starts a cache refresh shortly before expiry
@@ -56,13 +56,11 @@ export default function (pi: ExtensionAPI) {
 	const deadline = (ctx: ExtensionContext) =>
 		cacheDeadline(ctx.model, ctx.sessionManager.getBranch(), process.env.PI_CACHE_RETENTION);
 
-	// The timer runs only while the cache is alive, and only in interactive sessions (`pi -p` runs
-	// are covered by the input hook alone). A session or model whose cache is already dead doesn't
-	// compact on its own: you may only want to read it. Its next message compacts first instead.
-	function arm(ctx: ExtensionContext) {
+	// Only interactive sessions get the timer; `pi -p` runs are covered by the input hook alone.
+	function arm(ctx: ExtensionContext, onlyWhileAlive = false) {
 		clearTimeout(timer);
 		const at = deadline(ctx);
-		if (!ctx.hasUI || at === undefined || at <= Date.now()) return;
+		if (!ctx.hasUI || at === undefined || (onlyWhileAlive && at <= Date.now())) return;
 		timer = setTimeout(() => onDeadline(ctx), Math.max(0, at + REFRESH_GRACE_MS - Date.now()));
 	}
 
@@ -74,8 +72,10 @@ export default function (pi: ExtensionAPI) {
 		ctx.compact(); // pi shows its own success or failure message
 	}
 
-	pi.on("session_start", (_event, ctx) => arm(ctx));
-	pi.on("model_select", (_event, ctx) => arm(ctx));
+	// Opening a session, or switching to a model, whose cache is already dead doesn't compact: you
+	// may only want to read it. Its next message compacts first instead (the input hook below).
+	pi.on("session_start", (_event, ctx) => arm(ctx, true));
+	pi.on("model_select", (_event, ctx) => arm(ctx, true));
 	pi.on("agent_settled", (_event, ctx) => arm(ctx));
 	pi.on("session_shutdown", () => clearTimeout(timer));
 
