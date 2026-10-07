@@ -13,7 +13,7 @@ Why v0.1 behaves the way it does. The measurements behind it (session scans, liv
 | U5 | Success looks exactly like pi's own compaction. |
 | U6 | Recognize "too small" by pi's exact error text (accepting the drift risk). |
 | U7 | Lives in `~/dev/personal`, released to npm, installed from npm like the user's other pi extensions. |
-| U8 | A message sent while pi is working passes without compacting first, even if the cache expired during the work (see A17). A close call: it can cost a full-price request, but the alternative would cancel work that may have run for over an hour |
+| U8 | A message sent while pi is working passes without compacting first, even if the cache expired during the work. A close call: it can cost a full-price request (rare: pi's own warming usually refreshes the cache during long work), but compacting would cancel the running work, which may have run for over an hour (seen live: it broke a running tool). The work's next request meets the expired cache anyway |
 
 ## Made by the agent
 
@@ -35,7 +35,6 @@ Why v0.1 behaves the way it does. The measurements behind it (session scans, liv
 | A14 | Name `pi-idle-compact` (user's pick) | Short, says when it acts (while you're away) and what it does; the README states that the trigger is the cache expiring | `pi-cold-compact`, `pi-afk-compact`, `pi-compact-when-cold` |
 | A15 | The timer checks 60 s after the deadline | pi logs a cache refresh only when its reply arrives (~2 s after it starts, measured), so a slow refresh could still be in flight at the deadline. The input hook has no grace: a message sent then shouldn't pay for the uncompacted context | Track pi's in-flight requests |
 | A16 | The input hook doesn't touch the timer | Thanks to A15 the timer fires at the earliest 60 s after a message sent before the deadline, when the run is going (busy) or done; pi counts its own compactions as busy too. Clearing the timer on each message (tried after the first Codex review) left it unarmed when another extension took the message or pi failed before the request (second Codex review) | Clear on each message, re-arm on agent_settled |
-| A17 | A message sent while pi is busy passes without compacting, even if the cache expired during the run | Compacting mid-run aborts the run (seen live: it broke a running tool). The run's next request hits the dead cache anyway, with or without the message, so holding it gains nothing | Hold or compact before queued messages |
 
 ## Checked live for 0.1.0
 
