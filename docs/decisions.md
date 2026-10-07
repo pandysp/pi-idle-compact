@@ -43,7 +43,7 @@ pi 1.0.4 in tmux, with the user's extensions loaded (`@gotgenes/pi-anthropic-aut
 | Behaviour | Result |
 |---|---|
 | Idle session compacts on its own | Cache expired 22:59:34, compaction 23:00:40, pi's normal "Compacted from 91,100 tokens" |
-| Not while pi's refreshes keep the cache alive (Opus, 5-min cache, `cacheWarming: "idle"`) | 6 refreshes, the last at 23:12:14; first compaction attempt 23:18:16 (expiry + 60 s). That session was too small for pi to compact ("Nothing to compact"), so the attempt is the evidence |
+| Not while pi's refreshes keep the cache alive (Opus, 5-min cache, `cacheWarming: "idle"`) | 6 refreshes, each reading the whole 237k-token cache, the last at 23:45:49; compaction 23:51:55 (expiry + 66 s) |
 | Not mid-run | Expiry passed during a 5½-min tool call and a queued follow-up; compaction only 6 min after the run (23:07:16). Without the busy check, the timer compacted mid-run and aborted the tool |
 | A run that ends after expiry (tool stopped with Escape) | Compaction 60 s after expiry (23:12:04) |
 | `pi -p -c` after expiry | Compaction written before the new message |
