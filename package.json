@@ -1,0 +1,44 @@
+{
+	"name": "pi-cache-expiry-compact",
+	"version": "0.1.0",
+	"description": "Compacts a pi session automatically once its prompt cache has expired, and never while pi's cache warming still keeps it alive",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/pandysp/pi-cache-expiry-compact.git"
+	},
+	"keywords": [
+		"pi-package",
+		"pi",
+		"extension"
+	],
+	"license": "MIT",
+	"type": "module",
+	"files": [
+		"*.ts",
+		"CHANGELOG.md"
+	],
+	"pi": {
+		"extensions": [
+			"./index.ts"
+		]
+	},
+	"scripts": {
+		"check": "tsc",
+		"test": "vitest run",
+		"test:unit": "vitest run --exclude '**/*.e2e.test.ts'"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": ">=1.0.4"
+	},
+	"peerDependenciesMeta": {
+		"@earendil-works/pi-coding-agent": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@earendil-works/pi-coding-agent": "^1.0.4",
+		"@types/node": "^22",
+		"typescript": "^5.7",
+		"vitest": "^4.1.11"
+	}
+}
