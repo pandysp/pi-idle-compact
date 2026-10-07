@@ -1,6 +1,6 @@
-# pi-cache-expiry-compact
+# pi-idle-compact
 
-Compacts a [pi](https://pi.dev) session for you once its prompt cache has expired, so you don't have to type `/compact`.
+Compacts a [pi](https://pi.dev) session for you once its prompt cache has expired, so you don't have to type `/compact`. "Idle" because that happens while you're away; the trigger is the provider's cache running out, not a fixed idle time.
 
 **Why then:** once the provider's cache is gone, your next message pays to cache the whole conversation again anyway. Compacting right at that point gives you a short, fresh context for that next message, and you never compact a cache that's still paid for.
 
@@ -17,7 +17,7 @@ Compacts a [pi](https://pi.dev) session for you once its prompt cache has expire
 ## Install
 
 ```sh
-pi install npm:pi-cache-expiry-compact
+pi install npm:pi-idle-compact
 ```
 
 Requires **pi 1.0.4 or newer**. Tested with pi 1.0.4, loaded alongside `@gotgenes/pi-anthropic-auth`, `pi-minimal-tools` and `pi-hydra` (with its heads off).

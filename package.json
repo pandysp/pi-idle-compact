@@ -1,10 +1,10 @@
 {
-	"name": "pi-cache-expiry-compact",
+	"name": "pi-idle-compact",
 	"version": "0.1.0",
 	"description": "Compacts a pi session automatically once its prompt cache has expired, and never while pi's cache warming still keeps it alive",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/pandysp/pi-cache-expiry-compact.git"
+		"url": "git+https://github.com/pandysp/pi-idle-compact.git"
 	},
 	"keywords": [
 		"pi-package",
