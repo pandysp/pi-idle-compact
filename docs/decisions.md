@@ -13,6 +13,7 @@ Why v0.1 behaves the way it does. The measurements behind it (session scans, liv
 | U5 | Success looks exactly like pi's own compaction. |
 | U6 | Recognize "too small" by pi's exact error text (accepting the drift risk). |
 | U7 | Lives in `~/dev/personal`, released to npm, installed from npm like the user's other pi extensions. |
+| U8 | A message sent while pi is working passes without compacting first, even if the cache expired during the work (see A17). A close call: it can cost a full-price request, but the alternative would cancel work that may have run for over an hour |
 
 ## Made by the agent
 
