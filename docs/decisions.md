@@ -52,4 +52,5 @@ pi 1.0.4 in tmux, with the user's extensions loaded (`@gotgenes/pi-anthropic-aut
 | Session too small | pi's red "Nothing to compact"; the next message is sent |
 | Model without a lifetime (Codex gpt-6.1-sol) | Nothing after 6½ min; next message sent without compaction |
 | `/model` switch to Opus after Haiku replies | Haiku's expiry triggers nothing |
+| Opus with `PI_CACHE_RETENTION=long`, the real 1-hour cache | Cache expired 23:45:09, compaction 23:46:17, pi's normal "Compacted from 124,599 tokens" |
 | The npm package itself (`npm pack`) | pi lists it as loaded; the held `pi -p -c` path works from it |
