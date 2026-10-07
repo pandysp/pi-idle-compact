@@ -6,6 +6,14 @@ type Model = NonNullable<ExtensionContext["model"]>;
 export const NOTHING_TO_COMPACT = "Nothing to compact (session too small)";
 
 /**
+ * The timer checks this long after the deadline. pi starts a cache refresh shortly before expiry
+ * (cache-warmer.js:16) but logs it only once its reply arrives, usually ~2 s later; this covers
+ * a slow one. It also means a timer never fires while a message sent before the deadline is still
+ * being prepared (pi counts as idle until the request starts).
+ */
+const REFRESH_GRACE_MS = 60_000;
+
+/**
  * When the provider's prompt cache for `model` dies: the last time anything used it, plus its
  * lifetime. Undefined when pi gives the model no cache lifetime, or when nothing has used the
  * cache since the last compaction.
@@ -48,12 +56,14 @@ export default function (pi: ExtensionAPI) {
 	const deadline = (ctx: ExtensionContext) =>
 		cacheDeadline(ctx.model, ctx.sessionManager.getBranch(), process.env.PI_CACHE_RETENTION);
 
-	// Only interactive sessions get the timer; `pi -p` runs are covered by the input hook alone.
+	// The timer runs only while the cache is alive, and only in interactive sessions (`pi -p` runs
+	// are covered by the input hook alone). A session or model whose cache is already dead doesn't
+	// compact on its own: you may only want to read it. Its next message compacts first instead.
 	function arm(ctx: ExtensionContext) {
 		clearTimeout(timer);
 		const at = deadline(ctx);
-		if (!ctx.hasUI || at === undefined) return;
-		timer = setTimeout(() => onDeadline(ctx), Math.max(0, at - Date.now()));
+		if (!ctx.hasUI || at === undefined || at <= Date.now()) return;
+		timer = setTimeout(() => onDeadline(ctx), Math.max(0, at + REFRESH_GRACE_MS - Date.now()));
 	}
 
 	function onDeadline(ctx: ExtensionContext) {
@@ -64,11 +74,8 @@ export default function (pi: ExtensionAPI) {
 		ctx.compact(); // pi shows its own success or failure message
 	}
 
-	// Opening a session whose cache is already dead doesn't compact: you may only want to read it.
-	// Its first message compacts first instead (the input hook below).
-	pi.on("session_start", (_event, ctx) => {
-		if ((deadline(ctx) ?? 0) > Date.now()) arm(ctx);
-	});
+	pi.on("session_start", (_event, ctx) => arm(ctx));
+	pi.on("model_select", (_event, ctx) => arm(ctx));
 	pi.on("agent_settled", (_event, ctx) => arm(ctx));
 	pi.on("session_shutdown", () => clearTimeout(timer));
 
@@ -80,7 +87,6 @@ export default function (pi: ExtensionAPI) {
 		if (event.source === "extension" || !ctx.isIdle() || at === undefined || Date.now() < at) {
 			return { action: "continue" };
 		}
-		clearTimeout(timer);
 		const error = await new Promise<Error | undefined>((resolve) =>
 			ctx.compact({ onComplete: () => resolve(undefined), onError: resolve }),
 		);

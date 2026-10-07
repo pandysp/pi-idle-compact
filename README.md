@@ -6,7 +6,7 @@ Compacts a [pi](https://pi.dev) session for you once its prompt cache has expire
 
 | Situation | What happens |
 |---|---|
-| You leave a session open and the cache expires | It compacts on its own, with pi's normal compaction message |
+| You leave a session open and the cache expires | About a minute later it compacts on its own, with pi's normal compaction message |
 | pi's cache warming is still refreshing the cache (`cacheWarming: "idle"`) | It waits, and only compacts once the last refresh has expired too |
 | pi is busy when the cache expires (a long reply, a running tool, a queued message) | It waits until pi is done, then checks again |
 | You send a message after the cache expired, or run `pi -p -c "…"` | It compacts first, then sends |
@@ -28,6 +28,7 @@ Requires **pi 1.0.4 or newer**. Tested with pi 1.0.4, alongside `@gotgenes/pi-an
 - **On a 1-hour cache, pi's cache warming doesn't refresh while you're idle** (its idle warming stops after 30 minutes, and the first refresh would come at 54). So in practice the session compacts about an hour after your last message.
 - **A compaction costs a summary request**, like `/compact`. That's the trade: you pay it when the cache is already gone instead of typing `/compact` yourself.
 - **"Too small" is recognized by pi's exact error text.** If a pi update changes that text, small sessions start holding messages with a visible error, rather than failing silently.
+- **`pi -p` with a held message still prints the previous reply** to stdout: pi always prints the last reply in print mode. Check the exit code (1) and stderr.
 - **Attached images can't be put back** into the editor when a message is held; the error says how many to attach again.
 
 ## Decisions
