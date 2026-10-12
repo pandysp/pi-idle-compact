@@ -1,7 +1,7 @@
 {
 	"name": "pi-idle-compact",
-	"version": "0.1.0",
-	"description": "Compacts a pi session automatically once its prompt cache has expired, and never while pi's cache warming still keeps it alive",
+	"version": "0.2.0",
+	"description": "Compacts a pi session automatically once its prompt cache has expired (or, for Codex, after a fixed idle time), and never while pi's cache warming still keeps it alive",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/pandysp/pi-idle-compact.git"

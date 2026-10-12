@@ -1,6 +1,6 @@
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it } from "vitest";
-import { cacheDeadline } from "../index";
+import { CODEX_IDLE_SECONDS, cacheDeadline } from "../index";
 
 type Model = NonNullable<Parameters<typeof cacheDeadline>[0]>;
 
@@ -52,8 +52,22 @@ describe("cacheDeadline", () => {
 		expect(cacheDeadline(opus, [reply(T), compaction(T + 61 * min), reply(T + 70 * min)], "long")).toBe(T + 130 * min);
 	});
 
-	it("has none for a model pi gives no cache lifetime", () => {
-		expect(cacheDeadline(sol, [reply(T, { provider: "openai-codex", model: "gpt-6.1-sol" })], "long")).toBeUndefined();
+	it("gives Codex models a fixed idle time, whatever the retention setting", () => {
+		const branch = [reply(T, { provider: "openai-codex", model: "gpt-6.1-sol" })];
+		expect(CODEX_IDLE_SECONDS).toBe(60 * 60);
+		expect(cacheDeadline(sol, branch, "long")).toBe(T + 60 * min);
+		expect(cacheDeadline(sol, branch, undefined)).toBe(T + 60 * min);
+	});
+
+	it("prefers pi's lifetime if pi ever gives a Codex model one", () => {
+		const solWithLifetime = { ...sol, promptCache: { short: 600 } } as Model;
+		const branch = [reply(T, { provider: "openai-codex", model: "gpt-6.1-sol" })];
+		expect(cacheDeadline(solWithLifetime, branch, "short")).toBe(T + 10 * min);
+	});
+
+	it("has none for other models pi gives no cache lifetime", () => {
+		const gpt = { provider: "openai", id: "gpt-6-astra" } as Model;
+		expect(cacheDeadline(gpt, [reply(T, { provider: "openai", model: "gpt-6-astra" })], "long")).toBeUndefined();
 	});
 
 	it("has none before the first reply", () => {

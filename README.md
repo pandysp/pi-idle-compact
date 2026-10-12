@@ -1,12 +1,12 @@
 # pi-idle-compact
 
-Compacts a [pi](https://pi.dev) session for you once its prompt cache has expired, so you don't have to type `/compact`. "Idle" because that happens while you're away; the trigger is the provider's cache running out, not a fixed idle time.
+Compacts a [pi](https://pi.dev) session for you once its prompt cache has expired, so you don't have to type `/compact`. "Idle" because that happens while you're away. The trigger is the provider's cache running out; for Codex, which publishes no cache lifetime, it is a fixed idle time (see [Good to know](#good-to-know)).
 
-**Why then:** once the provider's cache is gone, your next message pays to cache the whole conversation again anyway. Compacting right at that point gives you a short, fresh context for that next message, and you never compact a cache that's still paid for.
+**Why then:** once the provider's cache is gone, your next message pays to cache the whole conversation again anyway. Compacting right at that point gives you a short, fresh context for that next message, and with a known lifetime you never compact a cache that's still paid for. Codex has no known lifetime, so there it can compact a cache that is still warm.
 
 | Situation | What happens |
 |---|---|
-| You leave a session open and the cache expires | About a minute later it compacts on its own, with pi's normal compaction message |
+| You leave a session open and the cache expires (Codex: the idle time runs out) | About a minute later it compacts on its own, with pi's normal compaction message |
 | pi's cache warming is still refreshing the cache (`cacheWarming: "idle"`) | It waits, and only compacts once the last refresh has expired too |
 | pi is busy when the cache expires (a long reply, a running tool, a queued message) | It waits until pi is done, then checks again |
 | You send a message after the cache expired, or run `pi -p -c "…"` | It compacts first, then sends |
@@ -20,11 +20,12 @@ Compacts a [pi](https://pi.dev) session for you once its prompt cache has expire
 pi install npm:pi-idle-compact
 ```
 
-Requires **pi 1.0.4 or newer**. Tested with pi 1.0.4, loaded alongside `@gotgenes/pi-anthropic-auth`, `pi-minimal-tools` and `pi-hydra` (with its heads off).
+Requires **pi 1.0.4 or newer**. Tested with pi 1.0.4 and, for Codex, pi 1.1.0; 0.1.0 was tested loaded alongside `@gotgenes/pi-anthropic-auth`, `pi-minimal-tools` and `pi-hydra` (with its heads off).
 
 ## Good to know
 
-- **Only models with a known cache lifetime.** The extension uses the same lifetime as pi's cache warming: the model's `promptCache` value for the retention in use (`long` with `PI_CACHE_RETENTION=long`, otherwise `short`). In pi 1.0.4 only direct Anthropic models have one (5 min, or 1 hour with `long`). Other models are left alone. pi leaves OpenAI out on purpose, and a Codex test showed no fixed lifetime: warm after 65 min in one run, cold after 50 in another.
+- **Models with a known cache lifetime, plus Codex.** The extension uses the same lifetime as pi's cache warming: the model's `promptCache` value for the retention in use (`long` with `PI_CACHE_RETENTION=long`, otherwise `short`). In pi 1.1.0 only direct Anthropic models have one (5 min, or 1 hour with `long`).
+- **Codex (`openai-codex`) compacts after 60 idle minutes, whatever `PI_CACHE_RETENTION` says.** Counted from your last request, like the cache lifetimes. That is a chosen idle time, not the cache's expiry: OpenAI publishes none, and in a test on 2026-10-12 five out of five untouched Codex caches were still warm after 60 and after 75 minutes, while some had already gone cold after 30. In that test, a Codex session would have compacted while its cache was still warm. Other models without a lifetime are left alone.
 - **On a 1-hour cache, pi's cache warming doesn't refresh while you're idle** (its idle warming stops after 30 minutes, and the first refresh would come at 54). So in practice the session compacts about an hour after your last message.
 - **A message sent while pi is still working is never held or compacted first**, even if the cache expired during the run: compacting would abort the run, and the run's next request meets the expired cache anyway.
 - **A compaction costs a summary request**, like `/compact`. That's the trade: you pay it when the cache is already gone instead of typing `/compact` yourself.
@@ -44,7 +45,7 @@ npm run check       # types
 npm run test:unit   # what CI runs on every push and pull request
 ```
 
-There is no automated test against real pi. Before a release, the behaviour is checked live in tmux; what was checked for 0.1.0 is listed at the end of [docs/decisions.md](docs/decisions.md). A change users notice gets an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md), in the same change.
+There is no automated test against real pi. Before a release, the behaviour is checked live in tmux; what was checked is listed at the end of [docs/decisions.md](docs/decisions.md). A change users notice gets an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md), in the same change.
 
 ## Releasing
 

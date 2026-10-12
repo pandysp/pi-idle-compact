@@ -14,17 +14,27 @@ const NOTHING_TO_COMPACT = "Nothing to compact (session too small)";
 const REFRESH_GRACE_MS = 60_000;
 
 /**
+ * How long a Codex session sits idle before it compacts. Codex publishes no cache lifetime and
+ * accepts no setting for one, and pi gives its models none, so this is a chosen idle time, not
+ * the cache's expiry. Measurements behind the value: docs/decisions.md A7.
+ */
+export const CODEX_IDLE_SECONDS = 60 * 60;
+
+/**
  * When the provider's prompt cache for `model` dies: the last time anything used it, plus its
- * lifetime. Undefined when pi gives the model no cache lifetime, or when nothing has used the
- * cache since the last compaction.
+ * lifetime (for Codex, the fixed idle time above). Undefined when the model has neither, or when
+ * nothing has used the cache since the last compaction.
  */
 export function cacheDeadline(
 	model: Model | undefined,
 	branch: SessionEntry[],
 	retention: string | undefined,
 ): number | undefined {
-	// Same lookup as pi's cache warming (getPromptCacheTtlMs, cache-warmer.js:26 in pi 1.0.4), which pi doesn't export.
-	const seconds = model?.promptCache?.[retention === "long" ? "long" : "short"];
+	// Same lookup as pi's cache warming (getPromptCacheTtlMs, cache-warmer.js:26 in pi 1.1.0), which pi doesn't export.
+	// pi's version also honours a per-request `cacheRetention`, which the coding agent never sets.
+	const seconds =
+		model?.promptCache?.[retention === "long" ? "long" : "short"] ??
+		(model?.provider === "openai-codex" ? CODEX_IDLE_SECONDS : undefined);
 	if (model === undefined || seconds === undefined) return undefined;
 	let lastUse: number | undefined;
 	for (const entry of branch) {
