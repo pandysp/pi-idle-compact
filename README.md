@@ -25,10 +25,10 @@ Requires **pi 1.0.4 or newer**. Tested with pi 1.0.4 and, for Codex, pi 1.1.0; 0
 ## Good to know
 
 - **Models with a known cache lifetime, plus Codex.** The extension uses the same lifetime as pi's cache warming: the model's `promptCache` value for the retention in use (`long` with `PI_CACHE_RETENTION=long`, otherwise `short`). In pi 1.1.0 only direct Anthropic models have one (5 min, or 1 hour with `long`).
-- **Codex (`openai-codex`) compacts after 60 idle minutes, whatever `PI_CACHE_RETENTION` says.** Counted from your last request, like the cache lifetimes. That is a chosen idle time, not the cache's expiry: OpenAI publishes none, and in a test on 2026-10-12 five out of five untouched Codex caches were still warm after 60 and after 75 minutes, while some had already gone cold after 30. In that test, a Codex session would have compacted while its cache was still warm. Other models without a lifetime are left alone.
+- **Codex (`openai-codex`) compacts after 60 idle minutes, whatever `PI_CACHE_RETENTION` says.** Counted from your last request, like the cache lifetimes. That is an inactivity policy, not a measured cache lifetime. In real pi/Astra tests on 2026-10-13, four of five conversations still reused over 99% of their input after 183 idle minutes. Removing this fixed timer is now the recommendation, **not a shipped change**. See [what we already tested and when to revisit it](docs/decisions.md#codex-read-before-changing-the-timer). Other models without a lifetime are left alone.
 - **On a 1-hour cache, pi's cache warming doesn't refresh while you're idle** (its idle warming stops after 30 minutes, and the first refresh would come at 54). So in practice the session compacts about an hour after your last message.
 - **A message sent while pi is still working is never held or compacted first**, even if the cache expired during the run: compacting would abort the run, and the run's next request meets the expired cache anyway.
-- **A compaction costs a summary request**, like `/compact`. That's the trade: you pay it when the cache is already gone instead of typing `/compact` yourself.
+- **A compaction adds a summary request**, like `/compact`. For Codex, the idle timer can trigger that work while the conversation is still cached. We have not measured whether compaction plus later turns saves subscription usage or preserves enough detail to be worthwhile.
 - **"Too small" is recognized by pi's exact error text.** If a pi update changes that text, small sessions start holding messages with a visible error, rather than failing silently.
 - **`pi -p` with a held message still prints the previous reply** to stdout: pi always prints the last reply in print mode. Check the exit code (1) and stderr.
 - **Attached images can't be put back** into the editor when a message is held; the error says how many to attach again.
@@ -45,7 +45,7 @@ npm run check       # types
 npm run test:unit   # what CI runs on every push and pull request
 ```
 
-There is no automated test against real pi. Before a release, the behaviour is checked live in tmux; what was checked is listed at the end of [docs/decisions.md](docs/decisions.md). A change users notice gets an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md), in the same change.
+There is no automated end-to-end regression test for this extension. Before a release, the behaviour is checked live in tmux; what was checked is listed at the end of [docs/decisions.md](docs/decisions.md). A change users notice gets an entry under `Unreleased` in [CHANGELOG.md](CHANGELOG.md), in the same change.
 
 ## Releasing
 

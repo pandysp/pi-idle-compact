@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Document the Codex cache investigation and the recommendation to remove its fixed idle timer. No behavior change: 0.2.0 still uses 60 minutes.
+
 ## 0.2.0
 
 - Codex models (`openai-codex`) now compact too: after 60 idle minutes, through the same timer and first-message fallback as Anthropic. Codex publishes no cache lifetime, so this is a fixed idle time, not the cache's expiry, and it often compacts a cache that is still warm.
