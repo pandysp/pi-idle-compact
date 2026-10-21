@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Document the Codex cache investigation and the recommendation to remove its fixed idle timer. No behavior change: 0.2.0 still uses 60 minutes.
+- Document the Codex cache investigation: what was tried, real-session miss rates by idle gap, and the open choice of threshold. No behavior change: 0.2.0 still uses 60 minutes.
 
 ## 0.2.0
 

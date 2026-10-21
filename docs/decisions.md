@@ -39,11 +39,16 @@ Why pi-idle-compact behaves the way it does. Early 0.1 measurements are summariz
 
 ## Codex: read before changing the timer
 
-**As of 2026-10-13, release 0.2.0 still compacts Codex-provider conversations after 60 idle minutes.** Removing that fallback is the recommendation, not an implemented change. It would preserve warm conversations but would not avoid the first uncached request after a genuine cache loss. Normal context-size and manual compaction would remain.
+**Release 0.2.0 compacts Codex-provider conversations after 60 idle minutes. Whether to keep 60 minutes, move to 2 hours or drop the timer is an open decision** (as of 2026-10-21).
 
-Here, **Codex means pi's `openai-codex` subscription connection**, tested with Astra—not OpenAI's Codex app or CLI. In the real pi 1.2.0 study, **four of five conversations still reused over 99% of their input after 183 idle minutes**. No reliable expiry cutoff or usable check before sending a request was established. This does not prove that compaction is uneconomical; future-turn usage and summary quality were not measured.
+Here, **Codex means pi's `openai-codex` subscription connection**, measured with Astra—not OpenAI's Codex app or CLI.
 
-**Already tried, none of which tells you before sending whether the cache is warm:** waiting a fixed time; reading `usage.cacheRead` (arrives after the request); cache diagnostics via `comparison_response_id` (returned `unavailable`); WebSocket `generate: false` (reports zero cached tokens even when warm); asking for a retention time (`24h` and `30m` rejected; `PI_CACHE_RETENTION` does not change Codex requests); a short-answer probe or periodic replay (still processes the full input, and replay did not prevent every miss).
+- **Real use (the maintainer's saved sessions, before 0.2.0):** most returns after 2+ idle hours missed the cache; after 1–2 hours, about 1 in 3 did (few cases). Most misses reused exactly zero tokens; the cause is unknown.
+- **Synthetic test (2026-10-13), which disagrees:** 4 of 5 fresh pi conversations were still cached after 3 hours. The reason for the difference is unknown; the real sessions reflect actual use.
+
+Compaction may pay off even on a warm cache, but how the subscription counts cached tokens is unknown, and lost detail is not measured. Counts, ranges and the cost estimate are in the maintainer's note (below).
+
+**Already tried, none of which tells you before sending whether the cache is warm:** waiting a fixed time (predicts likely loss, but is not a check); reading `usage.cacheRead` (arrives after the request); cache diagnostics via `comparison_response_id` (returned `unavailable`); WebSocket `generate: false` (reports zero cached tokens even when warm); asking for a retention time (`24h`, `30m` and, on 2026-10-21, `12h` rejected; `PI_CACHE_RETENTION` does not change Codex requests); a short-answer probe or periodic replay (still processes the full input, and replay did not prevent every miss).
 
 **Read the existing investigation before another paid test:** `~/main-workspace/notes/side-projects/pi-astra-cache-timing-2026-10-13.md`, especially “Before testing again.” That is the full record of the measurements, failed approaches and reasons to reopen the question. Its adjacent `-evidence.tar.gz` archive retains the raw evidence beyond scratch cleanup (maintainer's private vault).
 
