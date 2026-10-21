@@ -43,6 +43,8 @@ Why pi-idle-compact behaves the way it does. Early 0.1 measurements are summariz
 
 Here, **Codex means pi's `openai-codex` subscription connection**, tested with Astra—not OpenAI's Codex app or CLI. In the real pi 1.2.0 study, **four of five conversations still reused over 99% of their input after 183 idle minutes**. No reliable expiry cutoff or usable check before sending a request was established. This does not prove that compaction is uneconomical; future-turn usage and summary quality were not measured.
 
+**Already tried, none of which tells you before sending whether the cache is warm:** waiting a fixed time; reading `usage.cacheRead` (arrives after the request); cache diagnostics via `comparison_response_id` (returned `unavailable`); WebSocket `generate: false` (reports zero cached tokens even when warm); asking for a retention time (`24h` and `30m` rejected; `PI_CACHE_RETENTION` does not change Codex requests); a short-answer probe or periodic replay (still processes the full input, and replay did not prevent every miss).
+
 **Read the existing investigation before another paid test:** `~/main-workspace/notes/side-projects/pi-astra-cache-timing-2026-10-13.md`, especially “Before testing again.” That is the full record of the measurements, failed approaches and reasons to reopen the question. Its adjacent `-evidence.tar.gz` archive retains the raw evidence beyond scratch cleanup (maintainer's private vault).
 
 ## Checked live (0.1.0; Codex rows 0.2.0)

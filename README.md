@@ -1,6 +1,6 @@
 # pi-idle-compact
 
-Compacts a [pi](https://pi.dev) session for you once its prompt cache has expired, so you don't have to type `/compact`. "Idle" because that happens while you're away. The trigger is the provider's cache running out; for Codex, which publishes no cache lifetime, it is a fixed idle time (see [Good to know](#good-to-know)).
+Compacts a [pi](https://pi.dev) session for you once its prompt cache has expired (Codex: after 60 idle minutes), so you don't have to type `/compact`. "Idle" because that happens while you're away. The trigger is the provider's cache running out; for Codex, which publishes no cache lifetime, it is a fixed idle time (see [Good to know](#good-to-know)).
 
 **Why then:** once the provider's cache is gone, your next message pays to cache the whole conversation again anyway. Compacting right at that point gives you a short, fresh context for that next message, and with a known lifetime you never compact a cache that's still paid for. Codex has no known lifetime, so there it can compact a cache that is still warm.
 
